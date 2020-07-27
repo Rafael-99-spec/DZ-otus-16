@@ -1,51 +1,16 @@
 # ДЗ №16 Запретить всем пользователям, кроме группы admin логин в выходные (суббота и воскресенье), без учета праздников * дать конкретному пользователю права работать с докером и возможность рестартить докер сервис
 --------------------------------------------------------------------------------------------
 
-Внутри каталога homework17_Ansible сделать `vagrant up` 
+Внутри репозитория DZ-otus-16 находятся все необходиме файлы для развертывания стенда для поднятия которого достаточно набрать в командной строке `vagrant up`.
 
-Поднимется машина с именем vagrant1.
+После запуска Vagrant поднимается ВМ с названием ```default``` , внутри виртуальной машины настроивается ```PAM``` модуль для ограничения доступа на аутентификацию через ssh.
 
-1. Запретить всем пользователям, кроме группы admin логин в выходные(суббота и воскресенье), без учета праздников
+Создается группа ```admin``` и два пользователя - ```allowed``` и ```unable```. allowed входит в группу admin, и является единственным пользователем в системе которвый может залогиниться на ВМ 
 
-Особенностью этой машины будет то, что согласно первой задачи, 
-будут созданы 2 пользователя - vasya и petya, а также группа admin.
+через ```ssh``` в выходные, поскольку входит в группу admin. Именно с помощью ```pam_script``` техннология pam определяет, что доступ на ВМ в субботу и воскресение могут иметь исключительно 
 
-vasya член группы admin, petya - нет
+члены группы ```admin```.
 
-С помощью pam_script обеспечивается, чтобы члены группы admin
-могли логиниться по выходным и праздникам, указанным в файле Holidays.
+Для того чтобы не дождаться выходных в ```other_tasks.sh``` заданы две команды через systemd-утилиту timedatectl, которые отключают автоматическую синхранизацию по ntp и сменяют дату на 25 июля 2020го года(суббота).
 
-2. Дать конкретному пользователю права рута
-
-Не знаю, что именно имелось в виду, но я придумал дать возможность получения su привилегий определенному пользователю через PAM
-
-Для этого, в файл /etc/pam.d/su добавляются строки
-
-```
-account         sufficient      pam_succeed_if.so user = vasya use_uid quiet
-
-account         required        pam_succeed_if.so user notin root:vagrant:vasya
-```
-
-Соответственно, пользователь vasya получает возможность использовать повышение привилегий через su root.
-
-Еще, я добавил привилегии cap_sys_admin для пользователя vasya через файл /etc/pam.d/su
-
-```
-$ vagrant ssh vagrant1
-[vagrant@vagrant1 ~]$ su - vasya
-Password:
-Last login: Thu Jul 12 14:06:24 UTC 2018 on pts/0
-[vasya@vagrant1 ~]$ capsh --print
-Current: = cap_sys_admin+i
-Bounding set =cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_linux_immutable,cap_net_bind_service,cap_net_broadcast,cap_net_admin,cap_net_raw,cap_ipc_lock,cap_ipc_owner,cap_sys_module,cap_sys_rawio,cap_sys_chroot,cap_sys_ptrace,cap_sys_pacct,cap_sys_admin,cap_sys_boot,cap_sys_nice,cap_sys_resource,cap_sys_time,cap_sys_tty_config,cap_mknod,cap_lease,cap_audit_write,cap_audit_control,cap_setfcap,cap_mac_override,cap_mac_admin,cap_syslog,35,36
-Securebits: 00/0x0/1'b0
- secure-noroot: no (unlocked)
- secure-no-suid-fixup: no (unlocked)
- secure-keep-caps: no (unlocked)
-uid=1001(vasya)
-gid=1002(vasya)
-groups=1001(admin),1002(vasya)
-
-```
 
