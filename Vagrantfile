@@ -8,7 +8,6 @@
 MACHINES = {
   :default => {
         :box_name => "centos/7",
-        :ip_addr => '192.168.11.150'
   }
 }
 Vagrant.configure("2") do |config|
