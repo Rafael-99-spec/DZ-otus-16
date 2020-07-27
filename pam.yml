@@ -1,0 +1,30 @@
+- name: Deploy with pam config
+  hosts: default
+  become: true
+  tasks:
+    - name: Install epel-release
+      yum:
+        name:
+          - epel-release
+        state: present
+      tags:
+        - required_packages
+    - name: Add group "admin"
+      group:
+        name: admin
+        state: present
+    - name: Add user 'allowed'
+      user:
+        name: allowed
+        uid: 1040
+        group: admin
+    - name: Add user 'unable'    
+      user:
+        name: unable
+    - name: Install pam_script  
+      yum:
+        name:
+          - pam_script
+        state: present
+    - name: shell script    
+      shell: chmod +x /vagrant/other_tasks.sh && /vagrant/other_tasks.sh
